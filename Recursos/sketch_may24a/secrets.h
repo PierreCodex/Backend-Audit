@@ -13,17 +13,16 @@
 //   Windows: ipconfig → "Adaptador de LAN inalámbrica Wi-Fi" → IPv4
 //   macOS:   ipconfig getifaddr en0
 //   Linux:   hostname -I
+//   Ejemplo:
+//     #define BACKEND_HOST  "192.168.1.9"
+//     #define BACKEND_PORT  8000
 //
-// MODO NGROK (demo rápida): URL que te da ngrok, ej:
-//   #define BACKEND_HOST  "abc123.ngrok-free.app"
-//   #define BACKEND_PORT  80
-//
-// MODO RAILWAY (producción): URL pública del deploy, ej:
-//   #define BACKEND_HOST  "mi-vision.up.railway.app"
-//   #define BACKEND_PORT  443
-//   ⚠️ Railway usa HTTPS. El firmware actual hace HTTP simple.
-//      Para Railway se necesita modificar el .ino para WiFiClientSecure + setInsecure()
-//      o usar un proxy HTTP. Consultar README del backend.
+// MODO RAILWAY (producción — para la demo con tu amigo):
+//   Railway te da una URL pública tipo "mi-vision.up.railway.app"
+//   El firmware detecta puerto 443 y usa WiFiClientSecure automáticamente.
+//   Ejemplo:
+//     #define BACKEND_HOST  "mi-vision.up.railway.app"
+//     #define BACKEND_PORT  443
 //
 #define BACKEND_HOST   "192.168.1.9"
 #define BACKEND_PORT   8000

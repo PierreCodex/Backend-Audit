@@ -26,12 +26,33 @@
 #include "camera_pins.h"   // viene con el ejemplo CameraWebServer del paquete esp32
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ESPmDNS.h>
 #include <time.h>
 #include <Adafruit_NeoPixel.h>
 
 #include "secrets.h"
 #include "config.h"
+
+// ============================================================================
+// TLS / HTTPS helper
+// ============================================================================
+// Railway (y la mayoría de la web) usa HTTPS en puerto 443.
+// El ESP32 no tiene certificados CA cargados, así que usamos setInsecure()
+// para saltar la validación del certificado. Es seguro para este caso porque
+// controlamos el dominio (Railway) y el token Bearer ya autentica.
+WiFiClientSecure secureClient;
+
+inline bool usarHTTPS() { return BACKEND_PORT == 443; }
+
+inline String urlBase() {
+  String proto = usarHTTPS() ? "https://" : "http://";
+  String url = proto + BACKEND_HOST;
+  if (BACKEND_PORT != 443 && BACKEND_PORT != 80) {
+    url += ":" + String(BACKEND_PORT);
+  }
+  return url;
+}
 
 // ============================================================================
 // LED RGB
@@ -365,7 +386,7 @@ bool enviarCaptura(camera_fb_t *fb) {
   memcpy(body + preamble.length(), fb->buf, fb->len);
   memcpy(body + preamble.length() + fb->len, footer.c_str(), footer.length());
 
-  String url = String("http://") + BACKEND_HOST + ":" + BACKEND_PORT + "/api/v1/auditoria/captura";
+  String url = urlBase() + "/api/v1/auditoria/captura";
   String ts = timestampISO();
   String reqId = generarRequestId();
 
@@ -374,7 +395,12 @@ bool enviarCaptura(camera_fb_t *fb) {
 
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
-  http.begin(url);
+  if (usarHTTPS()) {
+    secureClient.setInsecure();
+    http.begin(secureClient, url);
+  } else {
+    http.begin(url);
+  }
   http.addHeader("Content-Type", String("multipart/form-data; boundary=") + boundary);
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
   http.addHeader("X-Nodo-Id", NODO_ID);
@@ -422,10 +448,15 @@ bool enviarCapturaConReintentos(camera_fb_t *fb) {
 bool hayCapturaPendiente() {
   if (WiFi.status() != WL_CONNECTED) return false;
 
-  String url = String("http://") + BACKEND_HOST + ":" + BACKEND_PORT + "/api/v1/capturas/pendiente";
+  String url = urlBase() + "/api/v1/capturas/pendiente";
   HTTPClient http;
   http.setTimeout(3000);
-  http.begin(url);
+  if (usarHTTPS()) {
+    secureClient.setInsecure();
+    http.begin(secureClient, url);
+  } else {
+    http.begin(url);
+  }
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
 
   bool pendiente = false;
