@@ -289,6 +289,83 @@
   .badge.warn { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,177,76,.25); }
   .badge.err { background: var(--red-dim); color: var(--red); border: 1px solid rgba(240,99,99,.25); }
 
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    html, body { font-size: 12px; overflow: auto; }
+    .topbar {
+      flex-wrap: wrap; gap: 8px; padding: 8px 12px; font-size: 13px;
+    }
+    .topbar .brand { font-size: 15px; }
+    .topbar .divider { display: none; }
+    .telemetry { gap: 10px; flex-wrap: wrap; width: 100%; }
+    .t-item { gap: 4px; }
+    .t-item .lbl { font-size: 9px; }
+    .t-item .val { font-size: 11px; }
+
+    .mission-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      height: auto; overflow: visible;
+      padding: 10px 12px 14px;
+      gap: 10px;
+    }
+
+    .panel-header {
+      flex-wrap: wrap; gap: 8px; padding: 8px 10px;
+    }
+    .panel-title { font-size: 12px; }
+
+    .viewer { min-height: 220px; }
+    .viewer-meta { gap: 6px; }
+    .meta-chip { font-size: 10px; padding: 4px 8px; }
+
+    .stats-row {
+      grid-template-columns: 1fr;
+      gap: 8px; padding: 10px 12px;
+    }
+    .stat-card .n { font-size: 26px; }
+    .stat-card .l { font-size: 9px; }
+
+    .product-row {
+      grid-template-columns: 1fr 50px 80px;
+      gap: 6px; padding: 6px 0;
+    }
+    .product-row .p-name { font-size: 12px; }
+    .product-row .p-qty { font-size: 14px; }
+
+    .controls {
+      flex-direction: column; align-items: stretch; gap: 6px;
+      padding: 8px 12px;
+    }
+    button, select { width: 100%; font-size: 13px; padding: 10px; }
+    select { min-width: unset; }
+
+    .terminal { min-height: 80px; max-height: 120px; font-size: 11px; }
+
+    .obs-box { margin: 0 10px 10px; padding: 8px 10px; font-size: 11px; }
+  }
+
+  @media (max-width: 480px) {
+    .topbar { padding: 6px 10px; }
+    .telemetry { gap: 8px; }
+    .t-item .lbl { display: none; }  /* ocultar labels en pantallas muy chicas */
+    .t-item .val { font-size: 10px; }
+
+    .viewer { min-height: 180px; }
+    .viewer-badge { top: 6px; left: 6px; padding: 4px 8px; font-size: 10px; }
+    .viewer-meta { bottom: 6px; left: 6px; right: 6px; }
+    .meta-chip { font-size: 9px; padding: 3px 6px; }
+
+    .stat-card .n { font-size: 22px; }
+
+    .product-row {
+      grid-template-columns: 1fr 40px 70px;
+      gap: 4px;
+    }
+    .product-row .p-name { font-size: 11px; }
+    .confidence-label { font-size: 9px; }
+  }
+
   /* Scrollbars */
   ::-webkit-scrollbar { width: 7px; height: 7px; }
   ::-webkit-scrollbar-track { background: transparent; }
