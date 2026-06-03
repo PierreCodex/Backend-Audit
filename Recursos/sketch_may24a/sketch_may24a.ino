@@ -26,6 +26,7 @@
 #include "camera_pins.h"   // viene con el ejemplo CameraWebServer del paquete esp32
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ESPmDNS.h>
 #include <time.h>
 #include <Adafruit_NeoPixel.h>
@@ -386,12 +387,12 @@ bool enviarCaptura(camera_fb_t *fb) {
   Serial.printf("[HTTP] POST %s  (%u bytes JPEG)\n", url.c_str(), (unsigned)fb->len);
   Serial.printf("[HTTP]   X-Request-Id: %s\n", reqId.c_str());
 
+  WiFiClientSecure client;
+  client.setInsecure();
+
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
-  if (usarHTTPS()) {
-    http.setInsecure();  // Saltar verificación de certificado (Railway usa certificados válidos)
-  }
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("Content-Type", String("multipart/form-data; boundary=") + boundary);
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
   http.addHeader("X-Nodo-Id", NODO_ID);
@@ -440,12 +441,12 @@ bool hayCapturaPendiente() {
   if (WiFi.status() != WL_CONNECTED) return false;
 
   String url = urlBase() + "/api/v1/capturas/pendiente";
+  WiFiClientSecure client;
+  client.setInsecure();
+
   HTTPClient http;
   http.setTimeout(3000);
-  if (usarHTTPS()) {
-    http.setInsecure();
-  }
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
 
   bool pendiente = false;
