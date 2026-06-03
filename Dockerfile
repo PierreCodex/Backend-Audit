@@ -1,17 +1,18 @@
 # Railway root Dockerfile
-# Este Dockerfile está en la raíz del repo porque Railway construye desde aquí.
-# La versión en backend_vision/Dockerfile es para desarrollo local.
+# Railway detecta puerto automáticamente. Usamos 8000 como default.
 
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PORT=8000 \
+    PYTHONPATH=/app/src
 
 WORKDIR /app
 
-# Instalar gcc y herramientas de build para paquetes con extensiones C (uvloop, httptools, etc.)
+# Instalar gcc para compilar extensiones C de uvicorn[standard]
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc6-dev \
@@ -22,7 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend_vision/src/ ./src/
 
-ENV PYTHONPATH=/app/src
-
-# Railway inyecta automáticamente la variable $PORT. No hardcodeamos EXPOSE.
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Railway espera que la app escuche en el puerto definido por $PORT.
+# Como definimos ENV PORT=8000, uvicorn escucha ahí.
+# Railway redirige el tráfico público a ese puerto interno.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
