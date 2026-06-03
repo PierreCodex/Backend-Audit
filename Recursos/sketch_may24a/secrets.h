@@ -18,14 +18,10 @@
 //     #define BACKEND_PORT  8000
 //
 // MODO RAILWAY (producción — para la demo con tu amigo):
-//   Railway te da una URL pública tipo "mi-vision.up.railway.app"
 //   El firmware detecta puerto 443 y usa WiFiClientSecure automáticamente.
-//   Ejemplo:
-//     #define BACKEND_HOST  "mi-vision.up.railway.app"
-//     #define BACKEND_PORT  443
 //
-#define BACKEND_HOST   "192.168.1.9"
-#define BACKEND_PORT   8000
+#define BACKEND_HOST   "backend-audit-production.up.railway.app"
+#define BACKEND_PORT   443
 
 // ============================================================================
 // Token de auth del backend (debe coincidir con ESP32_API_TOKEN del .env / Railway)
