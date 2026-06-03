@@ -5,7 +5,7 @@ correr Claude bajo demanda (botón "Analizar"). NO tocan el POS ni dependen de
 `ANALISIS_AUTOMATICO`: están pensados para validar el conteo de Claude en aislamiento
 antes de conectar el POS Laravel. Sin auth (herramienta de desarrollo local).
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -54,10 +54,11 @@ def _resolver_captura(nombre: str, settings: Settings) -> Path:
 
 def _a_item(ruta: Path) -> CapturaItem:
     stat = ruta.stat()
+    # Railway corre en UTC; sin tz explícita el navegador interpreta como local → bug.
     return CapturaItem(
         nombre=ruta.name,
         bytes=stat.st_size,
-        modificado=datetime.fromtimestamp(stat.st_mtime).isoformat(),
+        modificado=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
     )
 
 

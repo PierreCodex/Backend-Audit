@@ -531,8 +531,9 @@ async function cargarLista(seleccionar, esNueva=false) {
 
 function calcTiempoUltima() {
   if (!ultimaModificado) return null;
-  const seg = Math.round((Date.now() - new Date(ultimaModificado).getTime())/1000);
-  return seg;
+  let seg = Math.round((Date.now() - new Date(ultimaModificado).getTime())/1000);
+  // Si el servidor está en UTC y el navegador en otro tz, puede dar negativo
+  return Math.abs(seg);
 }
 
 function fmtTiempo(seg) {
@@ -553,8 +554,9 @@ async function refrescarEstado() {
       ultimaModificado = it.modificado;
       ultimaCapturaNombre = it.nombre;
 
-      // Telemetry
-      $("ultimaCaptura").textContent = fmtTiempo(Math.round((Date.now()-new Date(it.modificado).getTime())/1000));
+      // Telemetry (usar valor absoluto por si hay drift de timezone)
+      let segTrans = Math.round((Date.now()-new Date(it.modificado).getTime())/1000);
+      $("ultimaCaptura").textContent = fmtTiempo(Math.abs(segTrans));
       $("estadoConexion").innerHTML = `<span style="color:var(--green)">EN LÍNEA</span>`;
       $("ledConexion").className = "dot on pulse";
       $("nodoId").textContent = "ESP32-S3-CAM";
@@ -588,7 +590,10 @@ function actualizarContador() {
   const el = $("proximaCaptura");
   if (!ultimaModificado) { el.textContent = "—"; return; }
   const next = new Date(ultimaModificado).getTime() + INTERVALO_S*1000;
-  const rem = Math.round((next - Date.now())/1000);
+  let rem = Math.round((next - Date.now())/1000);
+  // Si hay drift de timezone, clamp a 0 o INTERVALO_S para que no muestre basura
+  if (rem < 0) rem = 0;
+  if (rem > INTERVALO_S) rem = INTERVALO_S;
   if (rem<=0) { el.textContent = "imminente"; el.style.color="var(--amber)"; return; }
   const m=Math.floor(rem/60), s=rem%60;
   el.textContent = `${m}:${String(s).padStart(2,"0")}`;
