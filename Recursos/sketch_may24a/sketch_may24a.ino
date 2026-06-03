@@ -26,7 +26,6 @@
 #include "camera_pins.h"   // viene con el ejemplo CameraWebServer del paquete esp32
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <WiFiClientSecure.h>
 #include <ESPmDNS.h>
 #include <time.h>
 #include <Adafruit_NeoPixel.h>
@@ -35,14 +34,8 @@
 #include "config.h"
 
 // ============================================================================
-// TLS / HTTPS helper
+// URL helper
 // ============================================================================
-// Railway (y la mayoría de la web) usa HTTPS en puerto 443.
-// El ESP32 no tiene certificados CA cargados, así que usamos setInsecure()
-// para saltar la validación del certificado. Es seguro para este caso porque
-// controlamos el dominio (Railway) y el token Bearer ya autentica.
-WiFiClientSecure secureClient;
-
 inline bool usarHTTPS() { return BACKEND_PORT == 443; }
 
 inline String urlBase() {
@@ -396,11 +389,9 @@ bool enviarCaptura(camera_fb_t *fb) {
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
   if (usarHTTPS()) {
-    secureClient.setInsecure();
-    http.begin(secureClient, url);
-  } else {
-    http.begin(url);
+    http.setInsecure();  // Saltar verificación de certificado (Railway usa certificados válidos)
   }
+  http.begin(url);
   http.addHeader("Content-Type", String("multipart/form-data; boundary=") + boundary);
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
   http.addHeader("X-Nodo-Id", NODO_ID);
@@ -452,11 +443,9 @@ bool hayCapturaPendiente() {
   HTTPClient http;
   http.setTimeout(3000);
   if (usarHTTPS()) {
-    secureClient.setInsecure();
-    http.begin(secureClient, url);
-  } else {
-    http.begin(url);
+    http.setInsecure();
   }
+  http.begin(url);
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
 
   bool pendiente = false;
