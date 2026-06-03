@@ -22,9 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend_vision/src/ ./src/
 
-ENV PORT=8000 \
-    PYTHONPATH=/app/src
+ENV PYTHONPATH=/app/src
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Usar $PORT (Railway lo inyecta automáticamente, default 8000 para compatibilidad local)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
