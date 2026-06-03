@@ -1,3 +1,7 @@
+# Railway root Dockerfile
+# Este Dockerfile está en la raíz del repo porque Railway construye desde aquí.
+# La versión en backend_vision/Dockerfile es para desarrollo local.
+
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
@@ -13,10 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend_vision/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/ ./src/
+COPY backend_vision/src/ ./src/
 
 ENV PORT=8000 \
     PYTHONPATH=/app/src
