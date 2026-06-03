@@ -24,7 +24,5 @@ COPY backend_vision/src/ ./src/
 
 ENV PYTHONPATH=/app/src
 
-EXPOSE 8000
-
-# Usar $PORT (Railway lo inyecta automáticamente, default 8000 para compatibilidad local)
+# Railway inyecta automáticamente la variable $PORT. No hardcodeamos EXPOSE.
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
