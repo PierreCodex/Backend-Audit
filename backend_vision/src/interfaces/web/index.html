@@ -3,167 +3,508 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Auditoría Visual — Validación de capturas</title>
+<title>Auditoría Visual — Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0e1116;
-    --panel: #171b22;
-    --panel-2: #1f2530;
-    --border: #2a313d;
-    --text: #e6e9ef;
-    --muted: #8b94a3;
-    --accent: #4f8cff;
-    --accent-press: #3b6fd1;
+    --bg: #060a10;
+    --panel: #0d1219;
+    --panel-2: #111820;
+    --border: #1e2d3d;
+    --border-bright: #2a3f56;
+    --text: #dbeafe;
+    --text-dim: #7a94b0;
+    --accent: #00d4aa;
+    --accent-dim: rgba(0,212,170,.15);
     --green: #3ecf8e;
+    --green-dim: rgba(62,207,142,.12);
     --amber: #f5b14c;
+    --amber-dim: rgba(245,177,76,.12);
     --red: #f06363;
+    --red-dim: rgba(240,99,99,.12);
+    --cyan: #38bdf8;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  }
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 22px; border-bottom: 1px solid var(--border); background: var(--panel);
-  }
-  header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .2px; }
-  header h1 span { color: var(--muted); font-weight: 400; }
-  #estado { font-size: 13px; color: var(--muted); }
-  #estado b { color: var(--text); font-weight: 600; }
-  main {
-    display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px;
-    padding: 18px 22px; max-width: 1280px; margin: 0 auto;
-  }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
-  .panel {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px; min-width: 0;
-  }
-  .panel h2 {
-    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
-    color: var(--muted); margin: 0 0 12px; font-weight: 600;
-  }
-  .foto-wrap {
-    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
-    aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center;
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    height: 100%;
     overflow: hidden;
   }
-  .foto-wrap img { width: 100%; height: 100%; object-fit: contain; }
-  .foto-wrap .vacio { color: var(--muted); font-size: 14px; }
-  .meta { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; margin: 10px 2px; }
-  .meta code { color: var(--text); background: var(--panel-2); padding: 1px 6px; border-radius: 5px; }
-  .controles { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
-  select, button {
-    font: inherit; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--panel-2); color: var(--text); padding: 9px 12px; cursor: pointer;
+
+  /* Top telemetry bar */
+  .topbar {
+    display: flex; align-items: center; gap: 18px;
+    padding: 10px 22px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(90deg, rgba(0,212,170,.03), transparent);
+    font-family: var(--font-head);
+    font-size: 15px;
+    flex-shrink: 0;
   }
-  select { flex: 1; min-width: 180px; }
-  button.primario { background: var(--accent); border-color: var(--accent); font-weight: 600; }
-  button.primario:hover { background: var(--accent-press); }
-  button:disabled { opacity: .5; cursor: not-allowed; }
-  label.check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
-  /* Resultado */
-  .resumen { display: flex; gap: 12px; margin-bottom: 14px; }
-  .stat { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-  .stat .n { font-size: 30px; font-weight: 700; line-height: 1; }
-  .stat .l { font-size: 12px; color: var(--muted); margin-top: 6px; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .badge.ok { background: rgba(62,207,142,.15); color: var(--green); }
-  .badge.warn { background: rgba(245,177,76,.15); color: var(--amber); }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .conf { font-weight: 600; }
-  .conf.alta { color: var(--green); } .conf.media { color: var(--amber); } .conf.baja { color: var(--red); }
-  .obs { margin-top: 14px; padding: 12px 14px; background: var(--panel-2); border-radius: 10px;
-         border-left: 3px solid var(--accent); font-size: 14px; color: #c8cedb; }
-  .placeholder { color: var(--muted); text-align: center; padding: 40px 10px; }
-  .error { color: var(--red); background: rgba(240,99,99,.1); border: 1px solid rgba(240,99,99,.3);
-           padding: 10px 14px; border-radius: 8px; margin-top: 12px; font-size: 14px; }
-  .spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
-          border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; }
+  .topbar .brand {
+    font-weight: 700; font-size: 18px; letter-spacing: .6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar .brand .logo {
+    width: 22px; height: 22px; border: 2px solid var(--accent);
+    border-radius: 4px; display: grid; place-items: center;
+    color: var(--accent); font-size: 11px; font-family: var(--font-mono);
+  }
+  .topbar .divider {
+    width: 1px; height: 24px; background: var(--border);
+  }
+  .telemetry {
+    display: flex; gap: 24px; align-items: center; flex: 1; flex-wrap: wrap;
+  }
+  .t-item { display: flex; align-items: center; gap: 8px; }
+  .t-item .lbl {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--text-dim); font-family: var(--font-mono);
+  }
+  .t-item .val {
+    font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .dot.on  { background: var(--green);  color: var(--green); }
+  .dot.off { background: var(--red);    color: var(--red); }
+  .dot.wrn { background: var(--amber);  color: var(--amber); }
+  .pulse { animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse {
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:.4; transform:scale(.85); }
+  }
+  .mono { font-family: var(--font-mono); }
+
+  /* Main grid */
+  .mission-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 14px;
+    padding: 14px 22px 18px;
+    height: calc(100vh - 58px);
+    overflow: hidden;
+  }
+  @media (max-width: 980px) {
+    .mission-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+      height: auto; overflow: auto;
+    }
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; flex-direction: column; overflow: hidden;
+    position: relative;
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .panel-title {
+    font-family: var(--font-head); font-weight: 600; font-size: 14px;
+    letter-spacing: .06em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title .line {
+    width: 3px; height: 14px; border-radius: 2px; background: var(--accent);
+  }
+  .panel-body { flex: 1; overflow: hidden; position: relative; }
+
+  /* Image viewer */
+  .viewer {
+    position: relative; height: 100%; min-height: 260px;
+    background: #080c12; display: grid; place-items: center; overflow: hidden;
+  }
+  .viewer img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    opacity: 0; transition: opacity .4s ease;
+  }
+  .viewer img.show { opacity: 1; }
+  .viewer .vacio {
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 13px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .scanlines {
+    position: absolute; inset: 0; pointer-events: none; opacity: .06;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px, rgba(0,212,170,.08) 2px, rgba(0,212,170,.08) 3px
+    );
+  }
+  .viewer-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(6,10,16,.85); border: 1px solid var(--border-bright);
+    padding: 6px 10px; border-radius: 6px; font-size: 11px;
+    display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px);
+  }
+  .viewer-meta {
+    position: absolute; bottom: 10px; left: 10px; right: 10px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .meta-chip {
+    background: rgba(6,10,16,.85); border: 1px solid var(--border-bright);
+    padding: 5px 10px; border-radius: 6px; font-size: 11px;
+    backdrop-filter: blur(4px);
+  }
+  .meta-chip b { color: var(--text); }
+
+  /* Log terminal */
+  .terminal {
+    background: #070b10;
+    font-family: var(--font-mono); font-size: 12px;
+    padding: 10px 14px; overflow-y: auto;
+    border-top: 1px solid var(--border);
+    min-height: 160px; max-height: 220px;
+  }
+  .terminal .entry {
+    margin-bottom: 4px; opacity: .9; animation: fadeIn .25s ease both;
+  }
+  .terminal .entry .ts { color: var(--text-dim); margin-right: 8px; }
+  .terminal .entry .tag { margin-right: 6px; font-weight: 700; }
+  .terminal .entry.ok  .tag { color: var(--green); }
+  .terminal .entry.info .tag { color: var(--cyan); }
+  .terminal .entry.warn .tag { color: var(--amber); }
+  .terminal .entry.err .tag { color: var(--red); }
+  .terminal .entry .msg { color: #aac0d6; }
+  @keyframes fadeIn { from{ opacity:0; transform:translateY(4px); } to{ opacity:.9; transform:translateY(0); } }
+
+  /* Analysis panel */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+  }
+  .stat-card {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .stat-card .n {
+    font-family: var(--font-head); font-size: 34px; font-weight: 700; line-height: 1;
+    color: var(--text);
+  }
+  .stat-card .l {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text-dim); margin-top: 8px;
+  }
+  .stat-card .bar {
+    position: absolute; bottom: 0; left: 0; height: 3px;
+    background: var(--accent); opacity: .6;
+    transition: width .6s cubic-bezier(.22,1,.36,1);
+  }
+
+  /* Product rows */
+  .product-list {
+    padding: 6px 14px 10px; overflow-y: auto; flex: 1;
+  }
+  .product-row {
+    display: grid; grid-template-columns: 1fr 70px 90px;
+    gap: 10px; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid rgba(30,45,61,.5);
+    animation: slideIn .35s ease both;
+  }
+  .product-row:last-child { border-bottom: none; }
+  @keyframes slideIn { from{ opacity:0; transform:translateX(10px);} to{ opacity:1; transform:translateX(0);} }
+  .product-row .p-name { font-size: 13px; }
+  .product-row .p-qty {
+    text-align: right; font-weight: 700; font-family: var(--font-head); font-size: 16px;
+  }
+  .confidence-track {
+    height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden;
+    position: relative;
+  }
+  .confidence-fill {
+    height: 100%; border-radius: 3px;
+    transition: width .7s cubic-bezier(.22,1,.36,1);
+  }
+  .confidence-label {
+    text-align: right; font-size: 10px; color: var(--text-dim); margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cf-green { background: var(--green); }
+  .cf-amber { background: var(--amber); }
+  .cf-red   { background: var(--red); }
+
+  .obs-box {
+    margin: 0 14px 12px; padding: 10px 12px;
+    background: rgba(56,189,248,.06); border: 1px solid rgba(56,189,248,.18);
+    border-radius: 8px; font-size: 12px; color: #a8cce8; line-height: 1.5;
+    animation: fadeIn .4s ease both;
+  }
+  .obs-box strong { color: var(--cyan); }
+
+  .controls {
+    display: flex; gap: 8px; padding: 10px 14px;
+    border-top: 1px solid var(--border); background: var(--panel-2);
+    flex-wrap: wrap;
+  }
+  button, select {
+    font-family: var(--font-mono); font-size: 12px;
+    border-radius: 6px; border: 1px solid var(--border-bright);
+    background: var(--panel); color: var(--text);
+    padding: 8px 12px; cursor: pointer; outline: none;
+  }
+  button { font-weight: 500; }
+  button.primario {
+    background: var(--accent); border-color: var(--accent); color: #001a14;
+    font-weight: 700;
+  }
+  button.primario:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  select { min-width: 180px; }
+
+  .placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-dim); height: 100%; gap: 10px;
+  }
+  .spin {
+    display:inline-block; width:18px; height:18px; border:2px solid rgba(255,255,255,.12);
+    border-top-color: var(--accent); border-radius:50%;
+    animation: spin .8s linear infinite;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px;
+    font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .badge.ok { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,.25); }
+  .badge.warn { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,177,76,.25); }
+  .badge.err { background: var(--red-dim); color: var(--red); border: 1px solid rgba(240,99,99,.25); }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a3f56; }
+
+  /* New capture flash */
+  .flash-enter {
+    animation: flashPop .6s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes flashPop {
+    0% { opacity:0; transform: scale(.96); filter: brightness(1.6); }
+    100% { opacity:1; transform: scale(1); filter: brightness(1); }
+  }
+  .new-tag {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--accent); color: #001a14; font-weight: 700; font-size: 10px;
+    padding: 4px 10px; border-radius: 4px; letter-spacing: .08em; text-transform: uppercase;
+    animation: fadeIn .3s ease both;
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Auditoría Visual <span>— validación de capturas</span></h1>
-  <div id="estado">cargando…</div>
-</header>
 
-<main>
-  <section class="panel">
-    <h2>Captura</h2>
-    <div class="foto-wrap">
-      <img id="foto" alt="captura" style="display:none" />
-      <div id="fotoVacio" class="vacio">Sin capturas todavía</div>
+<!-- Top telemetry -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">AV</div>
+    <span>Auditoría Visual</span>
+  </div>
+  <div class="divider"></div>
+  <div class="telemetry" id="telemetry">
+    <div class="t-item">
+      <span class="dot on pulse" id="ledConexion"></span>
+      <span class="lbl">Nodo</span>
+      <span class="val" id="nodoId">—</span>
     </div>
-    <div class="meta">
-      <span>archivo: <code id="mNombre">—</code></span>
-      <span>fecha: <code id="mFecha">—</code></span>
-      <span>tamaño: <code id="mPeso">—</code></span>
+    <div class="t-item">
+      <span class="lbl">Estado</span>
+      <span class="val" id="estadoConexion">SIN CONEXIÓN</span>
     </div>
-    <div class="controles">
+    <div class="t-item">
+      <span class="lbl">Última captura</span>
+      <span class="val mono" id="ultimaCaptura">—</span>
+    </div>
+    <div class="t-item">
+      <span class="lbl">Próxima auto</span>
+      <span class="val mono" id="proximaCaptura">—</span>
+    </div>
+    <div class="t-item" style="margin-left:auto">
+      <span class="lbl">Backend</span>
+      <span class="val mono" id="estadoBackend">iniciando…</span>
+    </div>
+  </div>
+</div>
+
+<!-- Mission Grid -->
+<div class="mission-grid">
+
+  <!-- Left: Viewer + Terminal -->
+  <div style="display:flex;flex-direction:column;gap:14px;min-height:0">
+    <!-- Image viewer -->
+    <div class="panel" style="flex:1;min-height:260px">
+      <div class="panel-header">
+        <div class="panel-title"><span class="line"></span> Visor de capturas</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge ok" id="badgeSincro">SINCRONIZADO</span>
+          <select id="lista" title="Elegir captura"></select>
+          <button id="btnRefrescar" title="Recargar lista">↻</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="viewer" id="viewer">
+          <div class="scanlines"></div>
+          <div class="vacio" id="vacioMsg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span>Esperando primera captura del ESP32…</span>
+          </div>
+          <img id="foto" alt="captura" />
+          <div class="viewer-badge" id="viewerBadge" style="display:none">
+            <span class="dot on pulse"></span>
+            <span id="badgeText">EN VIVO</span>
+          </div>
+          <div class="viewer-meta" id="viewerMeta" style="display:none">
+            <div class="meta-chip">archivo: <b id="mNombre">—</b></div>
+            <div class="meta-chip">fecha: <b id="mFecha">—</b></div>
+            <div class="meta-chip">tamaño: <b id="mPeso">—</b></div>
+          </div>
+          <div class="new-tag" id="newTag" style="display:none">Nueva captura</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal log -->
+    <div class="panel" style="flex:none;height:200px">
+      <div class="panel-header">
+        <div class="panel-title"><span class="line" style="background:var(--cyan)"></span> Registro de eventos</div>
+        <span style="color:var(--text-dim);font-size:11px">ID: <span class="mono">REQ-0A1F</span></span>
+      </div>
+      <div class="terminal" id="terminal"></div>
+    </div>
+  </div>
+
+  <!-- Right: Analysis -->
+  <div class="panel" id="panelAnalisis">
+    <div class="panel-header">
+      <div class="panel-title"><span class="line" style="background:var(--green)"></span> Análisis Claude</div>
+      <span class="badge ok" id="badgeAnalisis">LISTO</span>
+    </div>
+
+    <div class="stats-row" id="statsRow" style="display:none">
+      <div class="stat-card">
+        <div class="n" id="sTotal">0</div>
+        <div class="l">Productos detectados</div>
+        <div class="bar" id="barTotal" style="width:0%"></div>
+      </div>
+      <div class="stat-card">
+        <div class="n" id="sConf">0%</div>
+        <div class="l">Confianza general</div>
+        <div class="bar" id="barConf" style="width:0%;background:var(--green)"></div>
+      </div>
+      <div class="stat-card">
+        <div class="n" id="sVacios">—</div>
+        <div class="l">Espacios vacíos</div>
+        <div class="bar" id="barVacios" style="width:0%;background:var(--amber)"></div>
+      </div>
+    </div>
+
+    <div class="product-list" id="productList">
+      <div class="placeholder">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+        </svg>
+        <span>Elegí una captura y tocá <b style="color:var(--text)">Analizar</b></span>
+      </div>
+    </div>
+
+    <div id="obsBox" style="display:none" class="obs-box"></div>
+
+    <div class="controls">
       <button id="btnCapturar" class="primario">📸 Capturar ahora</button>
-      <button id="btnAnalizar" class="primario">Analizar</button>
-      <button id="btnRefrescar" title="Recargar lista">↻</button>
+      <button id="btnAnalizar" class="primario">🔬 Analizar</button>
+      <label style="display:flex;align-items:center;gap:6px;color:var(--text-dim);font-size:11px;margin-left:auto;cursor:pointer">
+        <input type="checkbox" id="autoSeguir" checked /> Auto-seguir última
+      </label>
     </div>
-    <div class="controles" style="margin-top:10px">
-      <select id="lista" title="Elegir captura"></select>
-    </div>
-    <div class="controles" style="margin-top:10px; justify-content:space-between">
-      <label class="check"><input type="checkbox" id="autoSeguir" checked /> Seguir la última automáticamente</label>
-      <span id="contador" style="font-size:13px;color:var(--muted)">—</span>
-    </div>
-    <div id="estadoCaptura" style="margin-top:8px;font-size:13px;color:var(--muted);min-height:18px"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Conteo de Claude</h2>
-    <div id="resultado">
-      <div class="placeholder">Elegí una captura y tocá <b>Analizar</b>.</div>
-    </div>
-  </section>
-</main>
+  </div>
+</div>
 
 <script>
 const API = "/api/v1";
 const $ = (id) => document.getElementById(id);
-let actual = null;          // nombre de la captura mostrada
+let actual = null;
 let analizando = false;
-const INTERVALO_S = 300;     // intervalo de captura automática del ESP32 (5 min)
-let ultimaModificado = null; // ISO de la captura más nueva (para el contador)
-let esperando = false;       // true tras "Capturar ahora", hasta que llega la foto nueva
+const INTERVALO_S = 300;
+let ultimaModificado = null;
+let esperando = false;
 let nombreAlSolicitar = null;
+let ultimaCapturaNombre = null;
 
-function fmtPeso(b) { return b >= 1024 ? (b / 1024).toFixed(0) + " KB" : b + " B"; }
+function fmtPeso(b) { return b >= 1024 ? (b/1024).toFixed(0)+" KB" : b+" B"; }
 function fmtFecha(iso) {
-  try { return new Date(iso).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" }); }
+  try { return new Date(iso).toLocaleString("es-PE",{dateStyle:"short",timeStyle:"medium"}); }
   catch { return iso; }
 }
-function claseConf(v) { return v >= 0.7 ? "alta" : v >= 0.4 ? "media" : "baja"; }
+function tsNow() {
+  const d = new Date();
+  return d.toLocaleTimeString("es-PE",{hour12:false}) + "." + String(d.getMilliseconds()).padStart(3,"0");
+}
+function claseConf(v) { return v>=.7?"alta":v>=.4?"media":"baja"; }
+function colorClass(v) { return v>=.7?"cf-green":v>=.4?"cf-amber":"cf-red"; }
+
+function log(msg, tipo="info") {
+  const term = $("terminal");
+  const entry = document.createElement("div");
+  entry.className = `entry ${tipo}`;
+  const tag = tipo==="ok"?"[OK]":tipo==="warn"?"[WARN]":tipo==="err"?"[ERR]":"[INFO]";
+  entry.innerHTML = `<span class="ts">${tsNow()}</span><span class="tag">${tag}</span><span class="msg">${msg}</span>`;
+  term.appendChild(entry);
+  term.scrollTop = term.scrollHeight;
+  // limitar líneas
+  while (term.children.length > 120) term.removeChild(term.firstChild);
+}
 
 async function jsonOrThrow(resp) {
-  let data = null;
-  try { data = await resp.json(); } catch {}
-  if (!resp.ok) throw new Error((data && data.detail) || ("HTTP " + resp.status));
+  let data=null;
+  try { data=await resp.json(); } catch {}
+  if (!resp.ok) throw new Error((data&&data.detail)||("HTTP "+resp.status));
   return data;
 }
 
-function mostrarCaptura(item) {
+function mostrarCaptura(item, esNueva=false) {
   actual = item.nombre;
   $("foto").src = `${API}/capturas/${encodeURIComponent(item.nombre)}/imagen`;
-  $("foto").style.display = "block";
-  $("fotoVacio").style.display = "none";
+  $("foto").classList.add("show");
+  $("foto").classList.toggle("flash-enter", esNueva);
+  setTimeout(()=>$("foto").classList.remove("flash-enter"), 700);
+  $("vacioMsg").style.display = "none";
+  $("viewerMeta").style.display = "flex";
+  $("viewerBadge").style.display = "flex";
   $("mNombre").textContent = item.nombre;
   $("mFecha").textContent = fmtFecha(item.modificado);
   $("mPeso").textContent = fmtPeso(item.bytes);
   if ($("lista").value !== item.nombre) $("lista").value = item.nombre;
+  if (esNueva) {
+    const nt = $("newTag");
+    nt.style.display = "block";
+    setTimeout(()=>nt.style.display="none", 3500);
+  }
 }
 
-async function cargarLista(seleccionar) {
+async function cargarLista(seleccionar, esNueva=false) {
   const items = await jsonOrThrow(await fetch(`${API}/capturas`));
   const sel = $("lista");
   sel.innerHTML = "";
@@ -174,47 +515,110 @@ async function cargarLista(seleccionar) {
     o.dataset.item = JSON.stringify(it);
     sel.appendChild(o);
   }
-  if (items.length === 0) { $("btnAnalizar").disabled = true; return; }
+  if (items.length===0) {
+    $("btnAnalizar").disabled = true;
+    $("badgeSincro").textContent = "SIN CAPTURAS";
+    $("badgeSincro").className = "badge warn";
+    log("Sin capturas disponibles en storage", "warn");
+    return;
+  }
   $("btnAnalizar").disabled = false;
-  const elegido = seleccionar && items.find(i => i.nombre === seleccionar);
-  mostrarCaptura(elegido || items[0]);
+  $("badgeSincro").textContent = "SINCRONIZADO";
+  $("badgeSincro").className = "badge ok";
+  const elegido = seleccionar && items.find(i=>i.nombre===seleccionar);
+  mostrarCaptura(elegido||items[0], esNueva);
+}
+
+function calcTiempoUltima() {
+  if (!ultimaModificado) return null;
+  const seg = Math.round((Date.now() - new Date(ultimaModificado).getTime())/1000);
+  return seg;
+}
+
+function fmtTiempo(seg) {
+  if (seg<60) return "hace "+seg+"s";
+  const m = Math.floor(seg/60), s = seg%60;
+  return `hace ${m}m ${s}s`;
 }
 
 async function refrescarEstado() {
   try {
-    await jsonOrThrow(await fetch(`${API}/health`));
+    const h = await jsonOrThrow(await fetch(`${API}/health`));
+    $("estadoBackend").innerHTML = `<span style="color:var(--green)">ONLINE</span> v${h.version||"0.1.0"}`;
+
     const ult = await fetch(`${API}/capturas/ultima`);
     if (ult.ok) {
       const it = await ult.json();
+      const t = calcTiempoUltima();
       ultimaModificado = it.modificado;
-      $("estado").innerHTML = `backend <b>OK</b> · última: ${fmtFecha(it.modificado)}`;
-      // ¿Llegó la foto que pedimos manualmente?
+      ultimaCapturaNombre = it.nombre;
+
+      // Telemetry
+      $("ultimaCaptura").textContent = fmtTiempo(Math.round((Date.now()-new Date(it.modificado).getTime())/1000));
+      $("estadoConexion").innerHTML = `<span style="color:var(--green)">EN LÍNEA</span>`;
+      $("ledConexion").className = "dot on pulse";
+      $("nodoId").textContent = "ESP32-S3-CAM";
+
       if (esperando && it.nombre !== nombreAlSolicitar) {
         esperando = false;
-        $("estadoCaptura").innerHTML = '<span style="color:var(--green)">✅ Captura nueva recibida</span>';
+        log(`Captura manual recibida: ${it.nombre} (${fmtPeso(it.bytes)})`, "ok");
+        await cargarLista(it.nombre, true);
       }
-      // Auto-seguir: si entró una captura nueva y no estamos analizando, saltamos a ella.
+
+      // Auto-seguir nueva captura automática del ESP32
       if ($("autoSeguir").checked && !analizando && it.nombre !== actual) {
-        await cargarLista(it.nombre);
+        const esPrimera = !actual;
+        log(`Nueva captura automática recibida: ${it.nombre} (${fmtPeso(it.bytes)})`, esPrimera?"info":"ok");
+        await cargarLista(it.nombre, !esPrimera);
       }
     } else {
-      $("estado").innerHTML = `backend <b>OK</b> · sin capturas`;
+      $("estadoConexion").innerHTML = `<span style="color:var(--amber)">SIN CAPTURAS</span>`;
+      $("ledConexion").className = "dot wrn";
     }
   } catch (e) {
-    $("estado").innerHTML = `backend <b style="color:var(--red)">caído</b>`;
+    $("estadoBackend").innerHTML = `<span style="color:var(--red)">CAÍDO</span>`;
+    $("estadoConexion").innerHTML = `<span style="color:var(--red)">SIN CONEXIÓN</span>`;
+    $("ledConexion").className = "dot off";
+    $("badgeSincro").textContent = "OFFLINE";
+    $("badgeSincro").className = "badge err";
   }
+}
+
+function actualizarContador() {
+  const el = $("proximaCaptura");
+  if (!ultimaModificado) { el.textContent = "—"; return; }
+  const next = new Date(ultimaModificado).getTime() + INTERVALO_S*1000;
+  const rem = Math.round((next - Date.now())/1000);
+  if (rem<=0) { el.textContent = "imminente"; el.style.color="var(--amber)"; return; }
+  const m=Math.floor(rem/60), s=rem%60;
+  el.textContent = `${m}:${String(s).padStart(2,"0")}`;
+  el.style.color = rem<60?"var(--amber)":"var(--text)";
 }
 
 async function analizar() {
   if (!actual || analizando) return;
   analizando = true;
   $("btnAnalizar").disabled = true;
-  $("resultado").innerHTML = `<div class="placeholder"><span class="spin"></span> Analizando con Claude… (10–20 s)</div>`;
+  $("badgeAnalisis").textContent = "ANALIZANDO";
+  $("badgeAnalisis").className = "badge warn";
+  log(`Iniciando análisis Claude sobre ${actual}…`, "info");
+
+  const list = $("productList");
+  list.innerHTML = `<div class="placeholder"><span class="spin"></span> Procesando con Claude…<br><span style="font-size:11px;color:var(--text-dim)">Detección de objetos en curso</span></div>`;
+  $("statsRow").style.display = "none";
+  $("obsBox").style.display = "none";
+
   try {
-    const r = await jsonOrThrow(await fetch(`${API}/capturas/${encodeURIComponent(actual)}/analizar`, { method: "POST" }));
+    const r = await jsonOrThrow(await fetch(`${API}/capturas/${encodeURIComponent(actual)}/analizar`, {method:"POST"}));
+    log(`Análisis completado: ${r.cantidad_total} productos, ${Math.round(r.confianza_general*100)}% confianza`, "ok");
     renderResultado(r);
+    $("badgeAnalisis").textContent = "COMPLETADO";
+    $("badgeAnalisis").className = "badge ok";
   } catch (e) {
-    $("resultado").innerHTML = `<div class="error">No se pudo analizar: ${e.message}</div>`;
+    log(`Error en análisis: ${e.message}`, "err");
+    $("productList").innerHTML = `<div class="placeholder" style="color:var(--red)">Error: ${e.message}</div>`;
+    $("badgeAnalisis").textContent = "ERROR";
+    $("badgeAnalisis").className = "badge err";
   } finally {
     analizando = false;
     $("btnAnalizar").disabled = false;
@@ -222,45 +626,48 @@ async function analizar() {
 }
 
 function renderResultado(r) {
-  const conf = Math.round(r.confianza_general * 100);
-  const filas = r.productos.length
-    ? r.productos.map(p => `
-        <tr>
-          <td>${p.nombre}</td>
-          <td class="num">${p.cantidad}</td>
-          <td class="num conf ${claseConf(p.confianza)}">${Math.round(p.confianza * 100)}%</td>
-        </tr>`).join("")
-    : `<tr><td colspan="3" class="placeholder">Claude no detectó productos</td></tr>`;
+  $("statsRow").style.display = "grid";
+  const confPct = Math.round(r.confianza_general*100);
+  $("sTotal").textContent = r.cantidad_total;
+  $("sConf").textContent = confPct+"%";
+  $("sVacios").textContent = r.espacios_vacios?"SÍ":"NO";
 
-  $("resultado").innerHTML = `
-    <div class="resumen">
-      <div class="stat"><div class="n">${r.cantidad_total}</div><div class="l">productos en total</div></div>
-      <div class="stat"><div class="n conf ${claseConf(r.confianza_general)}">${conf}%</div><div class="l">confianza general</div></div>
-    </div>
-    <div style="margin-bottom:12px">
-      ${r.espacios_vacios
-        ? '<span class="badge warn">⚠ espacios vacíos detectados</span>'
-        : '<span class="badge ok">estante completo</span>'}
-    </div>
-    <table>
-      <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Conf.</th></tr></thead>
-      <tbody>${filas}</tbody>
-    </table>
-    ${r.observaciones ? `<div class="obs"><b>Observaciones:</b> ${r.observaciones}</div>` : ""}
-  `;
+  setTimeout(()=>{
+    $("barTotal").style.width = Math.min(100, r.cantidad_total*6)+"%";
+    $("barConf").style.width = confPct+"%";
+    $("barConf").style.background = confPct>=70?"var(--green)":confPct>=40?"var(--amber)":"var(--red)";
+    $("barVacios").style.width = r.espacios_vacios?"60%":"0%";
+    $("barVacios").style.background = r.espacios_vacios?"var(--amber)":"var(--green)";
+  }, 50);
+
+  const list = $("productList");
+  if (!r.productos || r.productos.length===0) {
+    list.innerHTML = `<div class="placeholder">Claude no detectó productos en esta imagen</div>`;
+  } else {
+    list.innerHTML = r.productos.map((p,idx)=>`
+      <div class="product-row" style="animation-delay:${idx*40}ms">
+        <div class="p-name">${p.nombre}</div>
+        <div class="p-qty">${p.cantidad}</div>
+        <div>
+          <div class="confidence-track">
+            <div class="confidence-fill ${colorClass(p.confianza)}" style="width:${Math.round(p.confianza*100)}%"></div>
+          </div>
+          <div class="confidence-label">${Math.round(p.confianza*100)}%</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  const obs = $("obsBox");
+  if (r.observaciones) {
+    obs.style.display = "block";
+    obs.innerHTML = `<strong>Observaciones de Claude:</strong> ${r.observaciones}`;
+  } else {
+    obs.style.display = "none";
+  }
 }
 
-function actualizarContador() {
-  const el = $("contador");
-  if (!ultimaModificado) { el.textContent = "—"; return; }
-  const next = new Date(ultimaModificado).getTime() + INTERVALO_S * 1000;
-  const rem = Math.round((next - Date.now()) / 1000);
-  if (rem <= 0) { el.textContent = "⏱ captura automática inminente…"; return; }
-  const m = Math.floor(rem / 60), s = rem % 60;
-  el.textContent = `⏱ próxima automática en ${m}:${String(s).padStart(2, "0")}`;
-}
-
-function bombearRefresco() {            // poll rápido mientras esperamos la foto pedida
+function bombearRefresco() {
   if (!esperando) return;
   refrescarEstado();
   setTimeout(bombearRefresco, 2500);
@@ -269,36 +676,42 @@ function bombearRefresco() {            // poll rápido mientras esperamos la fo
 async function solicitarCaptura() {
   if (esperando) return;
   try {
-    await jsonOrThrow(await fetch(`${API}/capturas/solicitar`, { method: "POST" }));
+    await jsonOrThrow(await fetch(`${API}/capturas/solicitar`, {method:"POST"}));
     esperando = true;
     nombreAlSolicitar = actual;
-    $("autoSeguir").checked = true;     // saltar a la foto nueva apenas llegue
-    $("estadoCaptura").innerHTML = '<span class="spin"></span> Captura solicitada — el ESP32 la toma en unos segundos…';
+    $("autoSeguir").checked = true;
+    log("Solicitud de captura manual enviada al ESP32", "info");
     bombearRefresco();
-    setTimeout(() => {                  // aviso si no llega (firmware sin polling / ESP32 apagado)
+    setTimeout(()=>{
       if (esperando) {
         esperando = false;
-        $("estadoCaptura").innerHTML = '<span style="color:var(--amber)">⚠ No llegó foto nueva. ¿El ESP32 está encendido y con el firmware que hace polling?</span>';
+        log("Timeout: no llegó captura manual. ¿ESP32 encendido con polling activo?", "warn");
       }
     }, 25000);
   } catch (e) {
-    $("estadoCaptura").innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
+    log(`Error solicitando captura: ${e.message}`, "err");
   }
 }
 
 $("btnCapturar").addEventListener("click", solicitarCaptura);
-$("lista").addEventListener("change", (e) => {
-  $("autoSeguir").checked = false;  // el user eligió manual → dejamos de saltar a la última
+$("lista").addEventListener("change", (e)=>{
+  $("autoSeguir").checked = false;
   const opt = e.target.selectedOptions[0];
   if (opt && opt.dataset.item) mostrarCaptura(JSON.parse(opt.dataset.item));
 });
 $("btnAnalizar").addEventListener("click", analizar);
-$("btnRefrescar").addEventListener("click", () => cargarLista(actual));
+$("btnRefrescar").addEventListener("click", ()=>cargarLista(actual));
 
 (async function init() {
-  try { await cargarLista(); } catch (e) { $("estado").textContent = "error: " + e.message; }
+  log("Inicializando Mission Control…", "info");
+  try {
+    await cargarLista();
+    log("Capturas cargadas correctamente", "ok");
+  } catch (e) {
+    log("Error cargando capturas: "+e.message, "err");
+  }
   await refrescarEstado();
-  setInterval(refrescarEstado, 8000);  // poll: detecta capturas nuevas del ESP32
+  setInterval(refrescarEstado, 8000);
   setInterval(actualizarContador, 1000);
   actualizarContador();
 })();
