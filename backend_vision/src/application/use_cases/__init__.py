@@ -1,0 +1,1 @@
+"""Casos de uso: orquestan dominio + puertos para resolver un escenario de negocio."""

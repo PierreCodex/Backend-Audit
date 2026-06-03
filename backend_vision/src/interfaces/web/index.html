@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Auditoría Visual — Validación de capturas</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #171b22;
+    --panel-2: #1f2530;
+    --border: #2a313d;
+    --text: #e6e9ef;
+    --muted: #8b94a3;
+    --accent: #4f8cff;
+    --accent-press: #3b6fd1;
+    --green: #3ecf8e;
+    --amber: #f5b14c;
+    --red: #f06363;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px; border-bottom: 1px solid var(--border); background: var(--panel);
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .2px; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  #estado { font-size: 13px; color: var(--muted); }
+  #estado b { color: var(--text); font-weight: 600; }
+  main {
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px;
+    padding: 18px 22px; max-width: 1280px; margin: 0 auto;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; min-width: 0;
+  }
+  .panel h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 0 0 12px; font-weight: 600;
+  }
+  .foto-wrap {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .foto-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .foto-wrap .vacio { color: var(--muted); font-size: 14px; }
+  .meta { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; margin: 10px 2px; }
+  .meta code { color: var(--text); background: var(--panel-2); padding: 1px 6px; border-radius: 5px; }
+  .controles { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+  select, button {
+    font: inherit; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text); padding: 9px 12px; cursor: pointer;
+  }
+  select { flex: 1; min-width: 180px; }
+  button.primario { background: var(--accent); border-color: var(--accent); font-weight: 600; }
+  button.primario:hover { background: var(--accent-press); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  label.check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
+  /* Resultado */
+  .resumen { display: flex; gap: 12px; margin-bottom: 14px; }
+  .stat { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .stat .n { font-size: 30px; font-weight: 700; line-height: 1; }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .badge.ok { background: rgba(62,207,142,.15); color: var(--green); }
+  .badge.warn { background: rgba(245,177,76,.15); color: var(--amber); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .conf { font-weight: 600; }
+  .conf.alta { color: var(--green); } .conf.media { color: var(--amber); } .conf.baja { color: var(--red); }
+  .obs { margin-top: 14px; padding: 12px 14px; background: var(--panel-2); border-radius: 10px;
+         border-left: 3px solid var(--accent); font-size: 14px; color: #c8cedb; }
+  .placeholder { color: var(--muted); text-align: center; padding: 40px 10px; }
+  .error { color: var(--red); background: rgba(240,99,99,.1); border: 1px solid rgba(240,99,99,.3);
+           padding: 10px 14px; border-radius: 8px; margin-top: 12px; font-size: 14px; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
+          border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Auditoría Visual <span>— validación de capturas</span></h1>
+  <div id="estado">cargando…</div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Captura</h2>
+    <div class="foto-wrap">
+      <img id="foto" alt="captura" style="display:none" />
+      <div id="fotoVacio" class="vacio">Sin capturas todavía</div>
+    </div>
+    <div class="meta">
+      <span>archivo: <code id="mNombre">—</code></span>
+      <span>fecha: <code id="mFecha">—</code></span>
+      <span>tamaño: <code id="mPeso">—</code></span>
+    </div>
+    <div class="controles">
+      <button id="btnCapturar" class="primario">📸 Capturar ahora</button>
+      <button id="btnAnalizar" class="primario">Analizar</button>
+      <button id="btnRefrescar" title="Recargar lista">↻</button>
+    </div>
+    <div class="controles" style="margin-top:10px">
+      <select id="lista" title="Elegir captura"></select>
+    </div>
+    <div class="controles" style="margin-top:10px; justify-content:space-between">
+      <label class="check"><input type="checkbox" id="autoSeguir" checked /> Seguir la última automáticamente</label>
+      <span id="contador" style="font-size:13px;color:var(--muted)">—</span>
+    </div>
+    <div id="estadoCaptura" style="margin-top:8px;font-size:13px;color:var(--muted);min-height:18px"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Conteo de Claude</h2>
+    <div id="resultado">
+      <div class="placeholder">Elegí una captura y tocá <b>Analizar</b>.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = "/api/v1";
+const $ = (id) => document.getElementById(id);
+let actual = null;          // nombre de la captura mostrada
+let analizando = false;
+const INTERVALO_S = 300;     // intervalo de captura automática del ESP32 (5 min)
+let ultimaModificado = null; // ISO de la captura más nueva (para el contador)
+let esperando = false;       // true tras "Capturar ahora", hasta que llega la foto nueva
+let nombreAlSolicitar = null;
+
+function fmtPeso(b) { return b >= 1024 ? (b / 1024).toFixed(0) + " KB" : b + " B"; }
+function fmtFecha(iso) {
+  try { return new Date(iso).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" }); }
+  catch { return iso; }
+}
+function claseConf(v) { return v >= 0.7 ? "alta" : v >= 0.4 ? "media" : "baja"; }
+
+async function jsonOrThrow(resp) {
+  let data = null;
+  try { data = await resp.json(); } catch {}
+  if (!resp.ok) throw new Error((data && data.detail) || ("HTTP " + resp.status));
+  return data;
+}
+
+function mostrarCaptura(item) {
+  actual = item.nombre;
+  $("foto").src = `${API}/capturas/${encodeURIComponent(item.nombre)}/imagen`;
+  $("foto").style.display = "block";
+  $("fotoVacio").style.display = "none";
+  $("mNombre").textContent = item.nombre;
+  $("mFecha").textContent = fmtFecha(item.modificado);
+  $("mPeso").textContent = fmtPeso(item.bytes);
+  if ($("lista").value !== item.nombre) $("lista").value = item.nombre;
+}
+
+async function cargarLista(seleccionar) {
+  const items = await jsonOrThrow(await fetch(`${API}/capturas`));
+  const sel = $("lista");
+  sel.innerHTML = "";
+  for (const it of items) {
+    const o = document.createElement("option");
+    o.value = it.nombre;
+    o.textContent = `${fmtFecha(it.modificado)} · ${fmtPeso(it.bytes)}`;
+    o.dataset.item = JSON.stringify(it);
+    sel.appendChild(o);
+  }
+  if (items.length === 0) { $("btnAnalizar").disabled = true; return; }
+  $("btnAnalizar").disabled = false;
+  const elegido = seleccionar && items.find(i => i.nombre === seleccionar);
+  mostrarCaptura(elegido || items[0]);
+}
+
+async function refrescarEstado() {
+  try {
+    await jsonOrThrow(await fetch(`${API}/health`));
+    const ult = await fetch(`${API}/capturas/ultima`);
+    if (ult.ok) {
+      const it = await ult.json();
+      ultimaModificado = it.modificado;
+      $("estado").innerHTML = `backend <b>OK</b> · última: ${fmtFecha(it.modificado)}`;
+      // ¿Llegó la foto que pedimos manualmente?
+      if (esperando && it.nombre !== nombreAlSolicitar) {
+        esperando = false;
+        $("estadoCaptura").innerHTML = '<span style="color:var(--green)">✅ Captura nueva recibida</span>';
+      }
+      // Auto-seguir: si entró una captura nueva y no estamos analizando, saltamos a ella.
+      if ($("autoSeguir").checked && !analizando && it.nombre !== actual) {
+        await cargarLista(it.nombre);
+      }
+    } else {
+      $("estado").innerHTML = `backend <b>OK</b> · sin capturas`;
+    }
+  } catch (e) {
+    $("estado").innerHTML = `backend <b style="color:var(--red)">caído</b>`;
+  }
+}
+
+async function analizar() {
+  if (!actual || analizando) return;
+  analizando = true;
+  $("btnAnalizar").disabled = true;
+  $("resultado").innerHTML = `<div class="placeholder"><span class="spin"></span> Analizando con Claude… (10–20 s)</div>`;
+  try {
+    const r = await jsonOrThrow(await fetch(`${API}/capturas/${encodeURIComponent(actual)}/analizar`, { method: "POST" }));
+    renderResultado(r);
+  } catch (e) {
+    $("resultado").innerHTML = `<div class="error">No se pudo analizar: ${e.message}</div>`;
+  } finally {
+    analizando = false;
+    $("btnAnalizar").disabled = false;
+  }
+}
+
+function renderResultado(r) {
+  const conf = Math.round(r.confianza_general * 100);
+  const filas = r.productos.length
+    ? r.productos.map(p => `
+        <tr>
+          <td>${p.nombre}</td>
+          <td class="num">${p.cantidad}</td>
+          <td class="num conf ${claseConf(p.confianza)}">${Math.round(p.confianza * 100)}%</td>
+        </tr>`).join("")
+    : `<tr><td colspan="3" class="placeholder">Claude no detectó productos</td></tr>`;
+
+  $("resultado").innerHTML = `
+    <div class="resumen">
+      <div class="stat"><div class="n">${r.cantidad_total}</div><div class="l">productos en total</div></div>
+      <div class="stat"><div class="n conf ${claseConf(r.confianza_general)}">${conf}%</div><div class="l">confianza general</div></div>
+    </div>
+    <div style="margin-bottom:12px">
+      ${r.espacios_vacios
+        ? '<span class="badge warn">⚠ espacios vacíos detectados</span>'
+        : '<span class="badge ok">estante completo</span>'}
+    </div>
+    <table>
+      <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Conf.</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    ${r.observaciones ? `<div class="obs"><b>Observaciones:</b> ${r.observaciones}</div>` : ""}
+  `;
+}
+
+function actualizarContador() {
+  const el = $("contador");
+  if (!ultimaModificado) { el.textContent = "—"; return; }
+  const next = new Date(ultimaModificado).getTime() + INTERVALO_S * 1000;
+  const rem = Math.round((next - Date.now()) / 1000);
+  if (rem <= 0) { el.textContent = "⏱ captura automática inminente…"; return; }
+  const m = Math.floor(rem / 60), s = rem % 60;
+  el.textContent = `⏱ próxima automática en ${m}:${String(s).padStart(2, "0")}`;
+}
+
+function bombearRefresco() {            // poll rápido mientras esperamos la foto pedida
+  if (!esperando) return;
+  refrescarEstado();
+  setTimeout(bombearRefresco, 2500);
+}
+
+async function solicitarCaptura() {
+  if (esperando) return;
+  try {
+    await jsonOrThrow(await fetch(`${API}/capturas/solicitar`, { method: "POST" }));
+    esperando = true;
+    nombreAlSolicitar = actual;
+    $("autoSeguir").checked = true;     // saltar a la foto nueva apenas llegue
+    $("estadoCaptura").innerHTML = '<span class="spin"></span> Captura solicitada — el ESP32 la toma en unos segundos…';
+    bombearRefresco();
+    setTimeout(() => {                  // aviso si no llega (firmware sin polling / ESP32 apagado)
+      if (esperando) {
+        esperando = false;
+        $("estadoCaptura").innerHTML = '<span style="color:var(--amber)">⚠ No llegó foto nueva. ¿El ESP32 está encendido y con el firmware que hace polling?</span>';
+      }
+    }, 25000);
+  } catch (e) {
+    $("estadoCaptura").innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
+  }
+}
+
+$("btnCapturar").addEventListener("click", solicitarCaptura);
+$("lista").addEventListener("change", (e) => {
+  $("autoSeguir").checked = false;  // el user eligió manual → dejamos de saltar a la última
+  const opt = e.target.selectedOptions[0];
+  if (opt && opt.dataset.item) mostrarCaptura(JSON.parse(opt.dataset.item));
+});
+$("btnAnalizar").addEventListener("click", analizar);
+$("btnRefrescar").addEventListener("click", () => cargarLista(actual));
+
+(async function init() {
+  try { await cargarLista(); } catch (e) { $("estado").textContent = "error: " + e.message; }
+  await refrescarEstado();
+  setInterval(refrescarEstado, 8000);  // poll: detecta capturas nuevas del ESP32
+  setInterval(actualizarContador, 1000);
+  actualizarContador();
+})();
+</script>
+</body>
+</html>

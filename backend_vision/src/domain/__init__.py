@@ -1,0 +1,1 @@
+"""Capa 1: Dominio. Sin dependencias externas (ni FastAPI, ni Pydantic, ni Anthropic)."""

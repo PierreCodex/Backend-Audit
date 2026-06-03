@@ -1,0 +1,1 @@
+"""DTOs internos entre capas (no son DTOs HTTP)."""

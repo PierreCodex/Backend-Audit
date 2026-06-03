@@ -1,0 +1,1 @@
+"""Puertos: interfaces (Protocols) que la capa application define para que infrastructure implemente."""

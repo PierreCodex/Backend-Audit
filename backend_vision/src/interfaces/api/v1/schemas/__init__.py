@@ -1,0 +1,1 @@
+"""Schemas Pydantic para serialización HTTP."""

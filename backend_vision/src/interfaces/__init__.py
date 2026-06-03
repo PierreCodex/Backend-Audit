@@ -1,0 +1,1 @@
+"""Capa 4: Interfaces. FastAPI: routers, schemas HTTP, middleware, security."""

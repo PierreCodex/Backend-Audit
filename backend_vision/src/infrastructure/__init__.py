@@ -1,0 +1,1 @@
+"""Capa 3: Infraestructura. Adaptadores concretos (Claude SDK, httpx)."""

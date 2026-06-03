@@ -1,0 +1,1 @@
+"""Backend Python para auditoría visual de inventario."""

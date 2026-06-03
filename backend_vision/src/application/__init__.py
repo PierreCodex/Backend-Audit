@@ -1,0 +1,1 @@
+"""Capa 2: Aplicación. Puertos (Protocols), DTOs y casos de uso."""

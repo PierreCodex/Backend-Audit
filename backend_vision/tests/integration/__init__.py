@@ -1,0 +1,1 @@
+"""Tests de integración — FastAPI TestClient con dependencias mockeadas."""
