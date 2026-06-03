@@ -389,10 +389,14 @@ bool enviarCaptura(camera_fb_t *fb) {
 
   WiFiClientSecure client;
   client.setInsecure();
+  // Aumentar timeout de handshake TLS (Railway puede tardar en responder)
+  client.setHandshakeTimeout(15);
 
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
-  http.begin(client, url);
+  // Usar begin() con host explícito para que WiFiClientSecure envíe SNI correctamente
+  // (Railway necesita saber a qué dominio se conecta antes del handshake TLS)
+  http.begin(client, BACKEND_HOST, BACKEND_PORT, "/api/v1/auditoria/captura", usarHTTPS());
   http.addHeader("Content-Type", String("multipart/form-data; boundary=") + boundary);
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
   http.addHeader("X-Nodo-Id", NODO_ID);
@@ -443,10 +447,11 @@ bool hayCapturaPendiente() {
   String url = urlBase() + "/api/v1/capturas/pendiente";
   WiFiClientSecure client;
   client.setInsecure();
+  client.setHandshakeTimeout(15);
 
   HTTPClient http;
   http.setTimeout(3000);
-  http.begin(client, url);
+  http.begin(client, BACKEND_HOST, BACKEND_PORT, "/api/v1/capturas/pendiente", usarHTTPS());
   http.addHeader("Authorization", String("Bearer ") + BACKEND_TOKEN);
 
   bool pendiente = false;
